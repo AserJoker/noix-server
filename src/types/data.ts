@@ -46,6 +46,16 @@ export interface IModel {
 export interface IRecord {
   [key: string]: string | number | boolean | null | undefined;
 }
+export interface IMixedRecord {
+  [key: string]:
+    | IMixedRecord
+    | IMixedRecord[]
+    | string
+    | number
+    | boolean
+    | null
+    | undefined;
+}
 
 export type COLUMN_TYPE = "INTEGER" | "FLOAT" | "VARCHAR(256)" | "TEXT";
 export interface IColumn {

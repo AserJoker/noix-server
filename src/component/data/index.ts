@@ -2,7 +2,7 @@ import { Logger } from "log4js";
 import { Application } from "../../Application";
 import { Inject } from "../../decorator/inject.decorator";
 import { Provide } from "../../decorator/provide.decorator";
-import { IDataAdapter, IModel, IRecord } from "../../types/data";
+import { IDataAdapter, IMixedRecord, IModel, IRecord } from "../../types/data";
 interface IDataConfig extends Record<string, unknown> {
   adapter: string;
 }
@@ -30,21 +30,80 @@ class Data {
       throw new Error(`failed get adapter: ${adapter}`);
     }
   }
-  public queryOne(model: IModel, record: IRecord) {
-    return this.adapter.query(model, record).then((res) => {
-      return res[0] || null;
+  public async queryOne(model: IModel, mixedrecord: IMixedRecord) {
+    const record: IRecord = {};
+    Object.keys(mixedrecord).forEach((key) => {
+      const value = mixedrecord[key];
+      if (
+        typeof value === "string" ||
+        typeof value === "number" ||
+        typeof value === "boolean" ||
+        value === null
+      ) {
+        record[key] = value;
+      }
     });
+    const list = await this.adapter.query(model, record);
+    return list[0] || null;
   }
-  public updateOne(model: IModel, record: IRecord) {
+  public updateOne(model: IModel, mixedrecord: IMixedRecord) {
+    const record: IRecord = {};
+    Object.keys(mixedrecord).forEach((key) => {
+      const value = mixedrecord[key];
+      if (
+        typeof value === "string" ||
+        typeof value === "number" ||
+        typeof value === "boolean" ||
+        value === null
+      ) {
+        record[key] = value;
+      }
+    });
     return this.adapter.update(model, record);
   }
-  public insertOne(model: IModel, record: IRecord) {
+  public insertOne(model: IModel, mixedrecord: IMixedRecord) {
+    const record: IRecord = {};
+    Object.keys(mixedrecord).forEach((key) => {
+      const value = mixedrecord[key];
+      if (
+        typeof value === "string" ||
+        typeof value === "number" ||
+        typeof value === "boolean" ||
+        value === null
+      ) {
+        record[key] = value;
+      }
+    });
     return this.adapter.insert(model, record);
   }
-  public deleteOne(model: IModel, record: IRecord) {
+  public deleteOne(model: IModel, mixedrecord: IMixedRecord) {
+    const record: IRecord = {};
+    Object.keys(mixedrecord).forEach((key) => {
+      const value = mixedrecord[key];
+      if (
+        typeof value === "string" ||
+        typeof value === "number" ||
+        typeof value === "boolean" ||
+        value === null
+      ) {
+        record[key] = value;
+      }
+    });
     return this.adapter.delete(model, record);
   }
-  public queryList(model: IModel, record: IRecord) {
+  public queryList(model: IModel, mixedrecord: IMixedRecord) {
+    const record: IRecord = {};
+    Object.keys(mixedrecord).forEach((key) => {
+      const value = mixedrecord[key];
+      if (
+        typeof value === "string" ||
+        typeof value === "number" ||
+        typeof value === "boolean" ||
+        value === null
+      ) {
+        record[key] = value;
+      }
+    });
     return this.adapter.query(model, record);
   }
   public initTable(model: IModel) {
