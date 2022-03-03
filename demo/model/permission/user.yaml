@@ -1,0 +1,11 @@
+name: user
+extends: base.model
+fields:
+  name:
+    type: string
+    required: true
+  avater: url
+  description:
+    type: text
+    default: no description
+primary: id

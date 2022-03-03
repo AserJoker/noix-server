@@ -1,0 +1,36 @@
+components:
+  - core.system.logger
+  - name: core.system.model
+    dependencies:
+      - core.system.data
+
+config:
+  server:
+    name: noix-demo
+
+  logger:
+    EVENT:
+      level: debug
+      appenders:
+        - type: console
+
+    DATA:
+      level: debug
+      appenders:
+        - type: console
+
+    default:
+      level: debug
+      appenders:
+        - type: console
+
+  data:
+    adapter: core.data.file
+
+  mysql:
+    host: "127.0.0.1"
+    port: 3030
+    username: "admin"
+    password: "admin"
+  file:
+    path: "./data"

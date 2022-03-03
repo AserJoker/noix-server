@@ -1,0 +1,1 @@
+{"columns":[{"name":"id","type":"VARCHAR(256)","notnull":true}],"data":[],"name":"base_model","primary":"id"}
