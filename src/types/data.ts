@@ -17,6 +17,7 @@ export interface IOption {
 export interface IBaseField {
   type: FIELD_TYPE;
   required?: boolean;
+  name: string;
 }
 export interface ISimpleField extends IBaseField {
   type: "string" | "integer" | "float" | "boolean" | "text" | "url";
@@ -73,8 +74,15 @@ export interface ITable {
 }
 export interface IDataAdapter {
   create: (model: IModel) => Promise<void>;
-  query: (model: IModel, record: IRecord) => Promise<IRecord[]>;
+  query: (
+    model: IModel,
+    record: IRecord,
+    offset?: number,
+    size?: number
+  ) => Promise<IRecord[]>;
   insert: (model: IModel, record: IRecord) => Promise<IRecord>;
   delete: (model: IModel, record: IRecord) => Promise<IRecord>;
   update: (model: IModel, record: IRecord) => Promise<IRecord>;
+  createTask: () => Promise<number>;
+  endTask: (task: number) => Promise<void>;
 }

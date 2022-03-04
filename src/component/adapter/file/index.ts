@@ -1,4 +1,4 @@
-import { Logger } from "log4js";
+import { getLogger, Logger } from "log4js";
 import { Application } from "../../../Application";
 import { Inject } from "../../../decorator/inject.decorator";
 import { Provide } from "../../../decorator/provide.decorator";
@@ -20,7 +20,7 @@ interface IFileConfig {
 class File implements IDataAdapter {
   @Inject("#application")
   private app!: Application;
-  @Inject("#logger.DATA")
+  @Inject("#logger.DATA", getLogger())
   private logger!: Logger;
   private rootpath = "./data";
   private recordCounter = 0;
@@ -140,18 +140,38 @@ class File implements IDataAdapter {
     }
     return record;
   }
-  public async query(model: IModel, record: IRecord) {
+  public async query(model: IModel, record: IRecord, offset = 0, size = -1) {
     this.logger.info(`QUERY ${model.namespace}_${model.name}`);
     const name = `${model.namespace}.${model.name}`.replace(/\./g, "_");
     const filepath = path.resolve(this.rootpath, `${name}.json`);
     const table = JSON.parse(
       fs.readFileSync(filepath, { encoding: "utf-8" }).toString()
     ) as ITable;
-    return table.data.filter((item) => {
-      Object.keys(record).reduce((last, now) => {
+    const list: IRecord[] = [];
+    let _size = table.data.length;
+    if (size < _size && size !== -1) {
+      _size = size;
+    }
+    for (let index = offset; index < _size + offset; index++) {
+      if (index >= table.data.length) {
+        break;
+      }
+      list[index] = table.data[index] as IRecord;
+    }
+    return list.filter((item) => {
+      return Object.keys(record).reduce((last, now) => {
         return last || item[now] === record[now];
       }, true);
     });
+  }
+  public async createTask() {
+    const task = Date.now();
+    this.logger.debug(`task begin -- id: ${task}`);
+    return task;
+  }
+  public async endTask(task: number) {
+    this.logger.debug(`task end -- id: ${task}`);
+    return;
   }
 }
 export default File;

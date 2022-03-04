@@ -3,7 +3,7 @@ import Koa from "koa";
 import { Application } from "../../Application";
 import { Inject } from "../../decorator/inject.decorator";
 import http from "http";
-import { Logger } from "log4js";
+import { getLogger, Logger } from "log4js";
 import { IContainer } from "@noix/ioc";
 import { IMiddleware } from "../../types/http";
 
@@ -18,7 +18,7 @@ class Http {
   @Inject("#application")
   private app!: Application;
 
-  @Inject("#logger.HTTP")
+  @Inject("#logger.HTTP", getLogger())
   private logger!: Logger;
 
   @Inject("#container")

@@ -8,4 +8,6 @@ fields:
   description:
     type: text
     default: no description
+  userPermission:
+    type: string
 primary: id

@@ -1,11 +1,11 @@
 import { Context, Next } from "koa";
-import { Logger } from "log4js";
+import { getLogger, Logger } from "log4js";
 import { Inject } from "../../../decorator/inject.decorator";
 import { Provide } from "../../../decorator/provide.decorator";
 
 @Provide("core.http.middleware.result")
 class Result {
-  @Inject("#logger.HTTP")
+  @Inject("#logger.HTTP", getLogger())
   private logger!: Logger;
   public async exec(ctx: Context, next: Next) {
     if (ctx.method === "POST") {

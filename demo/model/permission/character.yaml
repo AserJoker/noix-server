@@ -1,0 +1,14 @@
+name: character
+extends: base.model
+primary: id
+fields:
+  permission:
+    type: string
+  userId: string
+  user:
+    type: o2m
+    refModel: permission.user
+    refs:
+      - permission
+    rels:
+      - userPermission

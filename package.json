@@ -17,8 +17,8 @@
     "typescript": "^4.6.2"
   },
   "dependencies": {
-    "@noix/ioc": "0.2.0",
-    "@noix/resolve": "0.2.0",
+    "@noix/ioc": "0.2.1",
+    "@noix/resolve": "0.2.3",
     "js-yaml": "^4.1.0",
     "koa": "^2.13.4",
     "log4js": "^6.4.1"

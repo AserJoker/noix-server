@@ -2,7 +2,7 @@ import { Logger } from "log4js";
 import { Application } from "../../../Application";
 import { Inject } from "../../../decorator/inject.decorator";
 import { Provide } from "../../../decorator/provide.decorator";
-import { IDataAdapter, IModel, IRecord } from "../../../types/data";
+import { IModel, IRecord } from "../../../types/data";
 interface IMysqlConfig extends Record<string, unknown> {
   username: string;
   password: string;
@@ -10,7 +10,7 @@ interface IMysqlConfig extends Record<string, unknown> {
   port: number;
 }
 @Provide<Mysql>("core.data.mysql", "single", "initialize")
-class Mysql implements IDataAdapter {
+class Mysql {
   @Inject("#application")
   private app!: Application;
   @Inject("#logger.DATA")

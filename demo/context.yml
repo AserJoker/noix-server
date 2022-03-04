@@ -7,7 +7,6 @@ components:
 
 config:
   http:
-    name: noix-demo
     host: 127.0.0.1
     port: 8080
     static: web
@@ -48,5 +47,6 @@ config:
     port: 3030
     username: "admin"
     password: "admin"
+
   file:
     path: "./data"
