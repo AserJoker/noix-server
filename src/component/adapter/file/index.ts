@@ -1,7 +1,7 @@
 import { Logger } from "log4js";
-import { Application } from "../../Application";
-import { Inject } from "../../decorator/inject.decorator";
-import { Provide } from "../../decorator/provide.decorator";
+import { Application } from "../../../Application";
+import { Inject } from "../../../decorator/inject.decorator";
+import { Provide } from "../../../decorator/provide.decorator";
 import {
   COLUMN_TYPE,
   IColumn,
@@ -9,7 +9,7 @@ import {
   IModel,
   IRecord,
   ITable,
-} from "../../types/data";
+} from "../../../types/data";
 import path from "path";
 import fs from "fs";
 interface IFileConfig {

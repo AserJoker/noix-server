@@ -1,12 +1,23 @@
 components:
   - core.system.logger
+  - core.system.http
   - name: core.system.model
     dependencies:
       - core.system.data
 
 config:
-  server:
+  http:
     name: noix-demo
+    host: 127.0.0.1
+    port: 8080
+    static: web
+    middlewares:
+      - core.http.middleware.bodyparser
+      - core.http.middleware.cors
+      - core.http.middleware.static
+      - core.http.middleware.result
+      - core.http.middleware.data
+      - core.http.middleware.notfound
 
   logger:
     EVENT:
@@ -15,6 +26,11 @@ config:
         - type: console
 
     DATA:
+      level: debug
+      appenders:
+        - type: console
+
+    HTTP:
       level: debug
       appenders:
         - type: console

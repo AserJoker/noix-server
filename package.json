@@ -6,6 +6,7 @@
   },
   "devDependencies": {
     "@types/js-yaml": "^4.0.5",
+    "@types/koa": "^2.13.4",
     "@types/log4js": "^2.3.5",
     "@typescript-eslint/eslint-plugin": "^5.13.0",
     "@typescript-eslint/parser": "^5.13.0",

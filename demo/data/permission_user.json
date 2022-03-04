@@ -1,11 +1,1 @@
-{
-  "columns": [
-    { "name": "id", "type": "VARCHAR(256)", "notnull": true },
-    { "name": "name", "type": "VARCHAR(256)", "notnull": true },
-    { "name": "avater", "type": "VARCHAR(256)", "notnull": false },
-    { "name": "description", "type": "TEXT" }
-  ],
-  "data": [],
-  "name": "permission_user",
-  "primary": "id"
-}
+{"columns":[{"name":"id","type":"VARCHAR(256)","notnull":true},{"name":"name","type":"VARCHAR(256)","notnull":true},{"name":"avater","type":"VARCHAR(256)","notnull":false},{"name":"description","type":"TEXT"}],"data":[],"name":"permission_user","primary":"id"}

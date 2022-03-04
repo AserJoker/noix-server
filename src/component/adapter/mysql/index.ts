@@ -1,8 +1,8 @@
 import { Logger } from "log4js";
-import { Application } from "../../Application";
-import { Inject } from "../../decorator/inject.decorator";
-import { Provide } from "../../decorator/provide.decorator";
-import { IDataAdapter, IModel, IRecord } from "../../types/data";
+import { Application } from "../../../Application";
+import { Inject } from "../../../decorator/inject.decorator";
+import { Provide } from "../../../decorator/provide.decorator";
+import { IDataAdapter, IModel, IRecord } from "../../../types/data";
 interface IMysqlConfig extends Record<string, unknown> {
   username: string;
   password: string;
