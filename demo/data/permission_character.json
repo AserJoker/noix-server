@@ -1,1 +1,1 @@
-{"columns":[{"name":"id","type":"VARCHAR(256)","notnull":true},{"name":"permission","type":"VARCHAR(256)"},{"name":"userId","type":"VARCHAR(256)","notnull":false}],"data":[{"permission":"*","id":"1"}],"name":"permission_character","primary":"id"}
+{"columns":[{"name":"id","type":"VARCHAR(256)","notnull":true},{"name":"permission","type":"VARCHAR(256)"},{"name":"userId","type":"VARCHAR(256)","notnull":false}],"data":[{"permission":"*","id":"1"},{"permission":"*","id":"3"}],"name":"permission_character","primary":"id"}

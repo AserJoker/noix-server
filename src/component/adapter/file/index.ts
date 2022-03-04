@@ -173,5 +173,8 @@ class File implements IDataAdapter {
     this.logger.debug(`task end -- id: ${task}`);
     return;
   }
+  public async interraptTask(task: number) {
+    this.logger.error(`task interrapt -- id: ${task}`);
+  }
 }
 export default File;

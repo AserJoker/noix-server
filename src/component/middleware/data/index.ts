@@ -22,11 +22,16 @@ class Data implements IMiddleware {
         throw new Error(`cannot resolve namespace ${namespace}`);
       }
       const task = await this.data.adapter.createTask();
-      ctx.body = await resolver(
-        JSON.parse(ctx.request.body?.toString() as string) as ISchema,
-        { task }
-      );
-      await this.data.adapter.endTask(task);
+      try {
+        ctx.body = await resolver(
+          JSON.parse(ctx.request.body?.toString() as string) as ISchema,
+          { task }
+        );
+        await this.data.adapter.endTask(task);
+      } catch (e) {
+        await this.data.adapter.interraptTask(task);
+        throw e;
+      }
     }
     return next();
   }
