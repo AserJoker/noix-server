@@ -13,5 +13,6 @@ module.exports = {
   rules: {
     "linebreak-style": ["error", "unix"],
     semi: ["error", "always"],
+    "@typescript-eslint/no-var-requires": "off",
   },
 };

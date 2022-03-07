@@ -1,6 +1,0 @@
-name: model
-fields:
-  id:
-    type: string
-    required: true
-primary: id

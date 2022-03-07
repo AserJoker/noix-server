@@ -5,8 +5,16 @@ import path from "path";
 import fs from "fs";
 import yaml from "js-yaml";
 import { IComplexField, IMixedRecord, IModel } from "../../types/data";
-import { Data } from "..";
-import { IResolve, ISchema, ResolveFunction, useResolve } from "@noix/resolve";
+import Data from "../data";
+import {
+  IResolve,
+  ISchema,
+  ResolveFunction,
+  ResolveValue,
+  useResolve,
+} from "@noix/resolve";
+import { useMixin, IResolver } from "../../decorator/mixin.decorator";
+import { BaseModel } from "../../mixin/BaseModel";
 type Resolver = <T = unknown>(
   schema: ISchema,
   ctx?: Record<string, unknown>
@@ -38,6 +46,23 @@ class Model {
 
   private initModel(model: IModel) {
     this.data.initTable(this.mixedModel(model));
+  }
+  private getMixin(model: IModel): Record<string, unknown> | undefined {
+    const token = `$mixin.${model.namespace}.${model.name}`;
+    const container = this.app.getContainer();
+    const mixin = container.inject(token) as IMixedRecord;
+    if (mixin) {
+      return mixin;
+    }
+    if (model.extends) {
+      const parent = this.models.find(
+        (m) => model.extends === `${m.namespace}.${m.name}`
+      );
+      if (parent) {
+        return this.getMixin(parent);
+      }
+    }
+    return;
   }
 
   private scan(filepath: string) {
@@ -122,64 +147,145 @@ class Model {
         }
       });
     }
-    modelResolver["insertOne"] = (async ({
-      condition,
-    }: {
-      condition: IMixedRecord;
-    }) => {
-      const res = await this.data.insertOne(model, condition);
-      const resolver = this.resolveModel(model, res);
-      return resolver;
-    }) as ResolveFunction;
-    modelResolver["updateOne"] = (async ({
-      condition,
-    }: {
-      condition: IMixedRecord;
-    }) => {
-      const res = await this.data.updateOne(model, condition);
-      return this.resolveModel(model, res);
-    }) as ResolveFunction;
-    modelResolver["deleteOne"] = (async ({
-      condition,
-    }: {
-      condition: IMixedRecord;
-    }) => {
-      const res = await this.data.deleteOne(model, condition);
-      return this.resolveModel(model, res);
-    }) as ResolveFunction;
-    modelResolver["queryOne"] = (async ({
-      condition,
-    }: {
-      condition: IMixedRecord;
-    }) => {
-      const res = await this.data.queryOne(model, condition);
-      if (res) {
+    const mixin = this.getMixin(model);
+    if (!mixin) {
+      modelResolver["insertOne"] = (async ({
+        condition,
+      }: {
+        condition: IMixedRecord;
+      }) => {
+        const res = await this.data.insertOne(model, condition);
+        const resolver = this.resolveModel(model, res);
+        return resolver;
+      }) as ResolveFunction;
+      modelResolver["updateOne"] = (async ({
+        condition,
+      }: {
+        condition: IMixedRecord;
+      }) => {
+        const res = await this.data.updateOne(model, condition);
         return this.resolveModel(model, res);
-      } else {
-        return null;
-      }
-    }) as ResolveFunction;
-    modelResolver["queryPage"] = (async ({
-      condition,
-      offset,
-      size,
-    }: {
-      condition: IMixedRecord;
-      offset: number;
-      size: number;
-    }) => {
-      const res = await this.data.queryPage(model, condition, offset, size);
-      if (res) {
-        const list: IResolve[] = [];
-        res.forEach((val, index) => {
-          list[index] = this.resolveModel(model, val);
-        });
-        return list;
-      } else {
-        return [];
-      }
-    }) as ResolveFunction;
+      }) as ResolveFunction;
+      modelResolver["deleteOne"] = (async ({
+        condition,
+      }: {
+        condition: IMixedRecord;
+      }) => {
+        const res = await this.data.deleteOne(model, condition);
+        return this.resolveModel(model, res);
+      }) as ResolveFunction;
+      modelResolver["queryOne"] = (async ({
+        condition,
+      }: {
+        condition: IMixedRecord;
+      }) => {
+        const res = await this.data.queryOne(model, condition);
+        if (res) {
+          return this.resolveModel(model, res);
+        } else {
+          return null;
+        }
+      }) as ResolveFunction;
+      modelResolver["queryPage"] = (async ({
+        condition,
+        offset,
+        size,
+      }: {
+        condition: IMixedRecord;
+        offset: number;
+        size: number;
+      }) => {
+        const res = await this.data.queryPage(model, condition, offset, size);
+        if (res) {
+          const list: IResolve[] = [];
+          res.forEach((val, index) => {
+            list[index] = this.resolveModel(model, val);
+          });
+          return list;
+        } else {
+          return [];
+        }
+      }) as ResolveFunction;
+    } else {
+      mixin["model"] = model;
+      const handles = useMixin(mixin.constructor as typeof BaseModel);
+      handles.forEach((handle) => {
+        modelResolver[handle.name] = (async (arg: Record<string, unknown>) => {
+          const h = mixin[handle.name] as (...args: unknown[]) => unknown;
+          const params = handle.params.map((pname) => arg[pname]);
+          const res = await h.apply(mixin, params);
+          const resolver =
+            handle.resolver === "$currentModel"
+              ? `${model.namespace}.${model.name}`
+              : handle.resolver;
+          return this.resolve(res, resolver);
+        }) as ResolveFunction;
+      });
+    }
     return modelResolver;
+  }
+
+  private resolve(value: unknown, resolver: string | IResolver): ResolveValue {
+    if (!value) {
+      return null;
+    }
+    if (
+      typeof value === "string" ||
+      typeof value === "number" ||
+      typeof value === "boolean"
+    ) {
+      return value;
+    }
+    if (Array.isArray(value)) {
+      return value.map((val) => this.resolve(val, resolver)) as IResolve[];
+    } else if (typeof value === "object") {
+      const record = value as IMixedRecord;
+      if (resolver === "custom") {
+        return this.resolveCustom(record);
+      } else {
+        if (typeof resolver === "string") {
+          const model = this.models.find(
+            (m) => `${m.namespace}.${m.name}` === resolver
+          );
+          if (model) {
+            return this.resolveModel(model, record);
+          }
+        } else {
+          const res: IResolve = {};
+          Object.keys(resolver).forEach((key) => {
+            const type = resolver[key];
+            if (type) {
+              res[key] = () => this.resolve(record[key], type);
+            }
+          });
+          return res;
+        }
+      }
+    }
+    return null;
+  }
+  public resolveCustom(record: IMixedRecord) {
+    const res: IResolve = {};
+    Object.keys(record).forEach((name) => {
+      const value = record[name];
+      if (Array.isArray(value)) {
+        res[name] = () =>
+          value.map((val) => {
+            if (typeof val === "object" && val) {
+              return this.resolveCustom(val);
+            } else {
+              return val;
+            }
+          });
+      } else {
+        if (typeof value === "object" && value) {
+          res[name] = () => this.resolveCustom(value);
+        } else {
+          res[name] = () => value as string | number | boolean;
+        }
+      }
+    });
+    return res;
   }
 
   public initialize() {
@@ -197,8 +303,24 @@ class Model {
       model.path = item;
       return model;
     });
+    this.models.push({
+      fields: {
+        id: {
+          type: "string",
+          required: true,
+          name: "id",
+        },
+      },
+      name: "model",
+      namespace: "base",
+      path: "inner",
+      primary: "id",
+      virtual: true,
+    });
     this.models.forEach((model) => {
-      this.initModel(model);
+      if (model.store !== false && !model.virtual) {
+        this.initModel(model);
+      }
     });
     this.makeResoponse();
   }
@@ -212,11 +334,13 @@ class Model {
   }
   public makeResoponse() {
     const res: Record<string, Record<string, ResolveFunction>> = {};
-    this.models.forEach((model) => {
-      const namespace = res[model.namespace] || {};
-      namespace[model.name] = () => this.resolveModel(model);
-      res[model.namespace] = namespace;
-    });
+    this.models
+      .filter((mod) => !mod.virtual && mod.store !== false)
+      .forEach((model) => {
+        const namespace = res[model.namespace] || {};
+        namespace[model.name] = () => this.resolveModel(model);
+        res[model.namespace] = namespace;
+      });
     Object.keys(res).forEach((key) => {
       this.response[key] = useResolve(
         () => res[key] as Record<string, ResolveFunction>
