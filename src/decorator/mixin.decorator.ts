@@ -48,5 +48,12 @@ export const Handle = (
   };
 };
 export const useMixin = (classObject: typeof BaseModel) => {
-  return handles.get(classObject) || [];
+  let list: IHandle[] = [];
+  let co = classObject;
+  while (co) {
+    const _handles = handles.get(co) || [];
+    list = [..._handles, ...list];
+    co = Object.getPrototypeOf(co);
+  }
+  return list;
 };

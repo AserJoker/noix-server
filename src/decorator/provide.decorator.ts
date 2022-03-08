@@ -41,5 +41,20 @@ function Provide(...args: unknown[]) {
   });
   return;
 }
-const useProviders = () => providers;
+const useProviders = () => {
+  const list = [...providers];
+  list.forEach((item) => {
+    const classObject = item.provider;
+    let parent = Object.getPrototypeOf(classObject) as IProvideClass<unknown>;
+    while (parent) {
+      const provider = providers.find((p) => p.provider === parent);
+      if (provider) {
+        item.injections = { ...provider.injections, ...item.injections };
+        item.values = { ...provider.values, ...item.values };
+      }
+      parent = Object.getPrototypeOf(parent) as IProvideClass<unknown>;
+    }
+  });
+  return list;
+};
 export { Provide, useProviders };
