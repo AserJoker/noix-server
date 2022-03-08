@@ -13,6 +13,7 @@ interface IContext {
 }
 export class Application {
   private static _theApp: Application | null = null;
+
   public static getApplication() {
     if (!Application._theApp) {
       Application._theApp = new Application();
@@ -22,6 +23,7 @@ export class Application {
 
   private _container: IContainer;
   private _config: Record<string, unknown> = {};
+  private _components: (string | IComponent)[] = [];
   private _contextPath: string = process.cwd();
 
   private constructor() {
@@ -87,6 +89,8 @@ export class Application {
       contextSource
     );
     this._config = context.config || {};
+  }
+  public initComponents() {
     const cache: string[] = [];
     const loadComponent = (comp: string | IComponent) => {
       if (typeof comp === "string") {
@@ -105,7 +109,7 @@ export class Application {
         }
       }
     };
-    context.components.forEach((comp) => {
+    this._components.forEach((comp) => {
       loadComponent(comp);
     });
   }
@@ -114,5 +118,30 @@ export class Application {
   }
   public getContextPath() {
     return this._contextPath;
+  }
+  public loadMixin() {
+    const mixin = path.resolve(this._contextPath, "mixin");
+    if (fs.existsSync(mixin) && fs.statSync(mixin).isDirectory()) {
+      const list = fs.readdirSync(mixin);
+      list.forEach((name) => {
+        const mixinPath = path.resolve(mixin, name);
+        if (
+          fs.statSync(mixinPath).isDirectory() ||
+          (fs.statSync(mixinPath).isFile() && path.extname(name) === ".js")
+        ) {
+          try {
+            const install = require(path.resolve(mixin, name)).default as (
+              app: Application
+            ) => void;
+            if (typeof install !== "function") {
+              throw new Error(`not a mixin module ${name}`);
+            }
+            install(this);
+          } catch (e) {
+            console.error(e);
+          }
+        }
+      });
+    }
   }
 }
