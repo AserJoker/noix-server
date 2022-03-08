@@ -148,72 +148,17 @@ class Model {
       });
     }
     const mixin = this.getMixin(model);
-    if (!mixin) {
-      modelResolver["insertOne"] = (async ({
-        condition,
-      }: {
-        condition: IMixedRecord;
-      }) => {
-        const res = await this.data.insertOne(model, condition);
-        const resolver = this.resolveModel(model, res);
-        return resolver;
-      }) as ResolveFunction;
-      modelResolver["updateOne"] = (async ({
-        condition,
-      }: {
-        condition: IMixedRecord;
-      }) => {
-        const res = await this.data.updateOne(model, condition);
-        return this.resolveModel(model, res);
-      }) as ResolveFunction;
-      modelResolver["deleteOne"] = (async ({
-        condition,
-      }: {
-        condition: IMixedRecord;
-      }) => {
-        const res = await this.data.deleteOne(model, condition);
-        return this.resolveModel(model, res);
-      }) as ResolveFunction;
-      modelResolver["queryOne"] = (async ({
-        condition,
-      }: {
-        condition: IMixedRecord;
-      }) => {
-        const res = await this.data.queryOne(model, condition);
-        if (res) {
-          return this.resolveModel(model, res);
-        } else {
-          return null;
-        }
-      }) as ResolveFunction;
-      modelResolver["queryPage"] = (async ({
-        condition,
-        offset,
-        size,
-      }: {
-        condition: IMixedRecord;
-        offset: number;
-        size: number;
-      }) => {
-        const res = await this.data.queryPage(model, condition, offset, size);
-        if (res) {
-          const list: IResolve[] = [];
-          res.forEach((val, index) => {
-            list[index] = this.resolveModel(model, val);
-          });
-          return list;
-        } else {
-          return [];
-        }
-      }) as ResolveFunction;
-    } else {
+    if (mixin) {
       mixin["model"] = model;
       const handles = useMixin(mixin.constructor as typeof BaseModel);
       handles.forEach((handle) => {
-        modelResolver[handle.name] = (async (arg: Record<string, unknown>) => {
+        modelResolver[handle.name] = (async (
+          arg: Record<string, unknown>,
+          ctx: Record<string, unknown>
+        ) => {
           const h = mixin[handle.name] as (...args: unknown[]) => unknown;
           const params = handle.params.map((pname) => arg[pname]);
-          const res = await h.apply(mixin, params);
+          const res = await h.apply({ ...mixin, ctx }, params);
           const resolver =
             handle.resolver === "$currentModel"
               ? `${model.namespace}.${model.name}`
