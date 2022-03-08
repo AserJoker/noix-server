@@ -3,7 +3,8 @@ import Data from "../component/data";
 import { Handle, Mixin } from "../decorator/mixin.decorator";
 import { Inject } from "../decorator/inject.decorator";
 import { IRequestContext } from "../types/http";
-import { getLogger, Logger } from "log4js";
+import { Logger } from "log4js";
+import { InjectLogger } from "../decorator/logger.decorator";
 
 @Mixin("base.model")
 export class BaseModel {
@@ -14,7 +15,7 @@ export class BaseModel {
 
   protected ctx!: IRequestContext;
 
-  @Inject("#logger.MODEL", getLogger())
+  @InjectLogger("MODEL")
   protected logger!: Logger;
 
   @Handle(["record"], "$currentModel")
