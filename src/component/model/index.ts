@@ -80,16 +80,28 @@ class Model {
     return list;
   }
 
-  private resolveM2OField(field: IComplexField, record: IMixedRecord) {
+  private resolveM2OField(
+    field: IComplexField,
+    record: IMixedRecord
+  ): ResolveFunction {
     const refModel = this.getModel(field.refModel);
     if (refModel) {
-      return async () => {
+      return async (_arg: unknown, ctx: Record<string, unknown>) => {
         const condition: IMixedRecord = {};
         field.refs.forEach((ref, index) => {
           const rel = field.rels[index] as string;
           condition[rel] = record[ref] as string | number | boolean;
         });
-        const res = await this.data.queryOne(refModel, condition);
+        const mixin = this.getMixin(refModel);
+        if (!mixin) {
+          throw new Error(`unknown model ${field.refModel}`);
+        }
+        const queryOne = mixin["queryOne"] as (
+          ...args: unknown[]
+        ) => Promise<Record<string, unknown>>;
+        const res = await queryOne.apply({ ...mixin, ctx, model: refModel }, [
+          condition,
+        ]);
         if (res) {
           return this.resolveModel(refModel, res);
         } else {
@@ -103,13 +115,24 @@ class Model {
   private resolveO2MField(field: IComplexField, record: IMixedRecord) {
     const refModel = this.getModel(field.refModel);
     if (refModel) {
-      return async () => {
+      return async (_arg: unknown, ctx: Record<string, unknown>) => {
         const condition: IMixedRecord = {};
         field.refs.forEach((ref, index) => {
           const rel = field.rels[index] as string;
           condition[rel] = record[ref] as string | number | boolean;
         });
-        const res = await this.data.queryList(refModel, condition);
+        const mixin = this.getMixin(refModel);
+        if (!mixin) {
+          throw new Error(`unknown model ${field.refModel}`);
+        }
+        const queryList = mixin["queryList"] as (
+          ...args: unknown[]
+        ) => Promise<Record<string, unknown>[]>;
+        const res = await queryList.apply({ ...mixin, ctx, model: refModel }, [
+          condition,
+          0,
+          20,
+        ]);
         if (res) {
           return res.map((val) => {
             return this.resolveModel(refModel, val);
@@ -159,18 +182,22 @@ class Model {
           const h = mixin[handle.name] as (...args: unknown[]) => unknown;
           const params = handle.params.map((pname) => arg[pname]);
           const res = await h.apply({ ...mixin, ctx }, params);
-          const resolver =
-            handle.resolver === "$currentModel"
-              ? `${model.namespace}.${model.name}`
-              : handle.resolver;
-          return this.resolve(res, resolver);
+          return this.resolve(
+            res,
+            handle.resolver,
+            `${model.namespace}.${model.name}`
+          );
         }) as ResolveFunction;
       });
     }
     return modelResolver;
   }
 
-  private resolve(value: unknown, resolver: string | IResolver): ResolveValue {
+  private resolve(
+    value: unknown,
+    resolver: string | IResolver,
+    model: string
+  ): ResolveValue {
     if (!value) {
       return null;
     }
@@ -182,25 +209,29 @@ class Model {
       return value;
     }
     if (Array.isArray(value)) {
-      return value.map((val) => this.resolve(val, resolver)) as IResolve[];
+      return value.map((val) =>
+        this.resolve(val, resolver, model)
+      ) as IResolve[];
     } else if (typeof value === "object") {
       const record = value as IMixedRecord;
       if (resolver === "custom") {
         return this.resolveCustom(record);
       } else {
         if (typeof resolver === "string") {
-          const model = this.models.find(
-            (m) => `${m.namespace}.${m.name}` === resolver
+          const type = resolver === "$currentModel" ? model : resolver;
+          const _model = this.models.find(
+            (m) => `${m.namespace}.${m.name}` === type
           );
-          if (model) {
-            return this.resolveModel(model, record);
+          if (_model) {
+            return this.resolveModel(_model, record);
           }
         } else {
           const res: IResolve = {};
           Object.keys(resolver).forEach((key) => {
-            const type = resolver[key];
+            const type =
+              resolver[key] === "$currentModel" ? model : resolver[key];
             if (type) {
-              res[key] = () => this.resolve(record[key], type);
+              res[key] = () => this.resolve(record[key], type, model);
             }
           });
           return res;

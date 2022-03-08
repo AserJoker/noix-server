@@ -25,7 +25,7 @@ class Data implements IMiddleware {
       try {
         ctx.body = await resolver(
           JSON.parse(ctx.request.body?.toString() as string) as ISchema,
-          { task }
+          { task, http: ctx }
         );
         await this.data.adapter.endTask(task);
       } catch (e) {

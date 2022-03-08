@@ -101,7 +101,7 @@ class Data {
   public initialize() {
     const config = this.app.getConfig("data") as IDataConfig;
     const { adapter } = config;
-    this.logger.info(`USING DATA ADAPTER: ${adapter}`);
+    this.logger.info(`using ${adapter}`);
     this._adapter = this.app.getContainer().inject<IDataAdapter>(adapter);
     if (!this._adapter) {
       throw new Error(`failed get adapter: ${adapter}`);
@@ -233,7 +233,7 @@ class Data {
     });
     return this.adapter.query(model, record);
   }
-  public queryPage(
+  public async queryPage(
     model: IModel,
     mixedrecord: IMixedRecord,
     offset: number,
@@ -251,7 +251,9 @@ class Data {
         record[key] = value;
       }
     });
-    return this.adapter.query(model, record, offset, size);
+    const list = await this.adapter.query(model, record, offset, size);
+    const total = await this.adapter.count(model);
+    return { list, total };
   }
   public initTable(model: IModel) {
     return this.adapter.create(model);

@@ -13,7 +13,7 @@ class Result {
         await next();
         ctx.body = {
           data: ctx.body,
-          message: ctx.response.message || null,
+          message: ctx.response.msg || null,
           success: true,
         };
       } catch (e) {

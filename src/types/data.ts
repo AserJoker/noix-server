@@ -90,4 +90,5 @@ export interface IDataAdapter {
   createTask: () => Promise<number>;
   endTask: (task: number) => Promise<void>;
   interraptTask: (task: number) => Promise<void>;
+  count: (model: IModel) => Promise<number>;
 }

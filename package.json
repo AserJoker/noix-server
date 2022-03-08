@@ -26,7 +26,8 @@
   },
   "scripts": {
     "build": "tsc",
-    "dev": "ts-node src/main.ts"
+    "dev": "ts-node src/main.ts",
+    "install": "npm run build"
   },
   "bin": "bin/main.js",
   "main": "bin/index.js",

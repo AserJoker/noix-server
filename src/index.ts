@@ -7,3 +7,4 @@ export * from "./mixin";
 export * from "./decorator/inject.decorator";
 export * from "./decorator/provide.decorator";
 export * from "./decorator/mixin.decorator";
+export * from "./env";
