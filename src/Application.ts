@@ -89,6 +89,7 @@ export class Application {
       contextSource
     );
     this._config = context.config || {};
+    this._components = context.components || [];
   }
   public initComponents() {
     const cache: string[] = [];
@@ -121,27 +122,44 @@ export class Application {
   }
   public loadMixin() {
     const mixin = path.resolve(this._contextPath, "mixin");
+    const isMixinModule = (mixinPath: string) => {
+      if (fs.statSync(mixinPath).isFile()) {
+        if (path.extname(mixinPath) === ".js") {
+          return true;
+        }
+      } else {
+        if (fs.statSync(mixinPath).isDirectory()) {
+          if (fs.existsSync(path.resolve(mixinPath, "package.json"))) {
+            return true;
+          }
+        }
+      }
+      return false;
+    };
     if (fs.existsSync(mixin) && fs.statSync(mixin).isDirectory()) {
       const list = fs.readdirSync(mixin);
       list.forEach((name) => {
         const mixinPath = path.resolve(mixin, name);
-        if (
-          fs.statSync(mixinPath).isDirectory() ||
-          (fs.statSync(mixinPath).isFile() && path.extname(name) === ".js")
-        ) {
+        if (isMixinModule(mixinPath)) {
+          let install: null | ((app: Application) => void) = null;
           try {
-            const install = require(path.resolve(mixin, name)).default as (
-              app: Application
-            ) => void;
-            if (typeof install !== "function") {
-              throw new Error(`not a mixin module ${name}`);
-            }
-            install(this);
+            install = require(mixinPath).default as (app: Application) => void;
           } catch (e) {
-            console.error(e);
+            // ;
+          }
+          if (typeof install === "function") {
+            install(this);
           }
         }
       });
     }
+  }
+  public get version() {
+    const pkg = fs
+      .readFileSync(path.resolve(__dirname, "../package.json"))
+      .toString();
+    const json = JSON.parse(pkg);
+    const [major, minor, patch] = json.version.split(".");
+    return { major, minor, patch };
   }
 }
