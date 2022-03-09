@@ -158,7 +158,7 @@ export class Application {
     const pkg = fs
       .readFileSync(path.resolve(__dirname, "../package.json"))
       .toString();
-    const json = JSON.parse(pkg);
+    const json = JSON.parse(pkg) as { version: string };
     const [major, minor, patch] = json.version.split(".");
     return { major, minor, patch };
   }
