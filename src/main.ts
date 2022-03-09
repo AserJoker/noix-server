@@ -7,7 +7,7 @@ import path from "path";
 import "./env";
 const rootPath = path.resolve(process.cwd());
 const app = Application.getApplication();
-app.resolve(useProviders());
 app.loadMixin();
+app.resolve(useProviders());
 app.loadContext(rootPath);
 app.initComponents();
