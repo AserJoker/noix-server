@@ -4,7 +4,7 @@ export interface IProvideInfo extends IProvide<unknown> {
   token: string | symbol;
 }
 const providers: IProvideInfo[] = [];
-const provide = (token: string | symbol, provider: IProvide<unknown>) => {
+const provide = <T>(token: string | symbol, provider: IProvide<T>) => {
   providers.push({ token, ...provider });
 };
 function Provide<T, K extends IProvideClass<T>>(target: K): void;

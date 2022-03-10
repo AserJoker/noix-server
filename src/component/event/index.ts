@@ -3,6 +3,7 @@ import { Application } from "../../Application";
 import { Inject } from "../../decorator/inject.decorator";
 import { Provide } from "../../decorator/provide.decorator";
 import { IEventEmitter } from "../../types/event";
+
 @Provide<Event>("core.system.event", "single", "initialize")
 class Event {
   @Inject("#application")
@@ -15,7 +16,7 @@ class Event {
     const events = this.app.getConfig("event") as string[];
     events.forEach((name) => {
       const emitter = this.getEventEmitter(name);
-      this.app.getContainer().store(`#emitter.${name}`, emitter);
+      this.app.getContainer().store(`#event.${name}`, emitter);
     });
   }
   public getEventEmitter<

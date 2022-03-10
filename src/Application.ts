@@ -3,14 +3,21 @@ import { IProvideInfo } from "./decorator/provide.decorator";
 import yaml from "js-yaml";
 import fs from "fs";
 import path from "path";
+
 interface IComponent {
   name: string;
   dependencies: (string | IComponent)[];
 }
+
+interface IMixinConfig {
+  path: string;
+}
+
 interface IContext {
   components: (string | IComponent)[];
   config: Record<string, unknown>;
 }
+
 export class Application {
   private static _theApp: Application | null = null;
 
@@ -120,40 +127,7 @@ export class Application {
   public getContextPath() {
     return this._contextPath;
   }
-  public loadMixin() {
-    const mixin = path.resolve(this._contextPath, "mixin");
-    const isMixinModule = (mixinPath: string) => {
-      if (fs.statSync(mixinPath).isFile()) {
-        if (path.extname(mixinPath) === ".js") {
-          return true;
-        }
-      } else {
-        if (fs.statSync(mixinPath).isDirectory()) {
-          if (fs.existsSync(path.resolve(mixinPath, "package.json"))) {
-            return true;
-          }
-        }
-      }
-      return false;
-    };
-    if (fs.existsSync(mixin) && fs.statSync(mixin).isDirectory()) {
-      const list = fs.readdirSync(mixin);
-      list.forEach((name) => {
-        const mixinPath = path.resolve(mixin, name);
-        if (isMixinModule(mixinPath)) {
-          let install: null | ((app: Application) => void) = null;
-          try {
-            install = require(mixinPath).default as (app: Application) => void;
-          } catch (e) {
-            // ;
-          }
-          if (typeof install === "function") {
-            install(this);
-          }
-        }
-      });
-    }
-  }
+
   public get version() {
     const pkg = fs
       .readFileSync(path.resolve(__dirname, "../package.json"))
@@ -161,5 +135,21 @@ export class Application {
     const json = JSON.parse(pkg) as { version: string };
     const [major, minor, patch] = json.version.split(".");
     return { major, minor, patch };
+  }
+
+  public loadMixin() {
+    const config = this.getConfig("mixin") as IMixinConfig;
+    const mixinPath = path.resolve(this._contextPath, config.path || "./mixin");
+    if (fs.existsSync(mixinPath) && fs.statSync(mixinPath).isDirectory()) {
+      const list = fs.readdirSync(mixinPath);
+      list.forEach((item) => {
+        const fullPath = path.resolve(mixinPath, item);
+        try {
+          require(fullPath);
+        } catch (e) {
+          console.error(e);
+        }
+      });
+    }
   }
 }

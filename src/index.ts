@@ -1,10 +1,11 @@
 export * from "./types/data";
 export * from "./types/http";
 export * from "./types/request";
+export * from "./types/event";
 export * from "./Application";
 export * from "./component";
 export * from "./mixin";
-export * from "./decorator/inject.decorator";
-export * from "./decorator/provide.decorator";
+export { Inject } from "./decorator/inject.decorator";
+export { Provide } from "./decorator/provide.decorator";
 export * from "./decorator/mixin.decorator";
 export * from "./env";

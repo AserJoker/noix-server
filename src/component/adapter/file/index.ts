@@ -16,13 +16,13 @@ interface IFileConfig {
   path: string;
 }
 
-@Provide<File>("core.data.file", "single", "initialize")
-class File implements IDataAdapter {
+@Provide<FileAdapter>("core.data.file", "single", "initialize")
+class FileAdapter implements IDataAdapter {
   @Inject("#application")
-  private app!: Application;
+  protected app!: Application;
   @Inject("#logger.DATA", getLogger())
-  private logger!: Logger;
-  private rootpath = "./data";
+  protected logger!: Logger;
+  protected rootpath = "./data";
   private recordCounter = 0;
   public initialize() {
     const config = this.app.getConfig("file") as IFileConfig;
@@ -186,4 +186,4 @@ class File implements IDataAdapter {
     this.logger.error(`task interrapt -- id: ${task}`);
   }
 }
-export default File;
+export default FileAdapter;

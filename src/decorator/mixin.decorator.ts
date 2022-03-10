@@ -57,3 +57,9 @@ export const useMixin = (classObject: typeof BaseModel) => {
   }
   return list;
 };
+export const mixin = <T extends typeof BaseModel = typeof BaseModel>(
+  classObject: T,
+  token: string
+) => {
+  Mixin(token)(classObject);
+};

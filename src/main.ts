@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 import { Application } from "./Application";
-import "./component";
-import "./mixin";
 import { useProviders } from "./decorator/provide.decorator";
 import path from "path";
 import "./env";
+import "./component";
+import "./mixin";
 const rootPath = path.resolve(process.cwd());
 const app = Application.getApplication();
 app.loadMixin();
