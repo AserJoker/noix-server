@@ -20,6 +20,7 @@ export interface IBaseField {
   name: string;
   unique?: boolean;
   default?: unknown;
+  model: string;
 }
 export interface ISimpleField extends IBaseField {
   type: "string" | "integer" | "float" | "boolean" | "text" | "url";
@@ -47,6 +48,7 @@ export interface IModel {
   primary: string;
   virtual?: boolean;
   store?: boolean;
+  model: string;
 }
 export interface IRecord {
   [key: string]: string | number | boolean | null | undefined;

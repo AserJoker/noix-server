@@ -78,6 +78,88 @@ class Data {
       throw new Error(`cannot load reference model ${field.refModel}`);
     }
   }
+  private async insertOrUpdateO2O(
+    field: IComplexField,
+    mixedrecord: IMixedRecord
+  ) {
+    const value = mixedrecord[field.name] as IMixedRecord;
+    const refModel = this.model.getModel(field.refModel);
+    const model = this.model.getModel(field.model);
+    if (model) {
+      if (refModel) {
+        const res = (await this.insertOrUpdateOne(
+          refModel,
+          value
+        )) as IMixedRecord;
+        mixedrecord[field.name] = res;
+        const _res = mixedrecord[field.name] as IMixedRecord;
+        const relationModel = this.model.getModel(
+          `${model.namespace}.${model.name}_${refModel.name}`
+        ) as IModel;
+
+        let name1 = model.name;
+        let name2 = refModel.name;
+        if (name1 === name2) {
+          name1 += "1";
+          name2 += "2";
+        }
+        let condition: IMixedRecord = {};
+        field.refs.forEach((ref, index) => {
+          const rel = field.rels[index] as string;
+          condition[`${name1}_${ref}`] = mixedrecord[ref];
+          condition[`${name2}_${rel}`] = _res[rel];
+        });
+        condition =
+          (await this.queryOne(relationModel, condition)) || condition;
+        await this.insertOrUpdateOne(relationModel, condition);
+      } else {
+        throw new Error(`cannot load reference model ${field.refModel}`);
+      }
+    }
+  }
+
+  private async insertOrUpdateM2M(
+    field: IComplexField,
+    mixedrecord: IMixedRecord
+  ) {
+    const value = mixedrecord[field.name] as IMixedRecord[];
+    const refModel = this.model.getModel(field.refModel);
+    const model = this.model.getModel(field.model);
+    if (model) {
+      if (refModel) {
+        await Promise.all(
+          value.map(async (rec, index) => {
+            value[index] = await this.insertOrUpdateOne(refModel, rec);
+          })
+        );
+        const relationModel = this.model.getModel(
+          `${model.namespace}.${model.name}_${refModel.name}`
+        ) as IModel;
+
+        let name1 = model.name;
+        let name2 = refModel.name;
+        if (name1 === name2) {
+          name1 += "1";
+          name2 += "2";
+        }
+        await Promise.all(
+          value.map(async (v) => {
+            let condition: IMixedRecord = {};
+            field.refs.forEach((ref, index) => {
+              const rel = field.rels[index] as string;
+              condition[`${name1}_${ref}`] = mixedrecord[ref];
+              condition[`${name2}_${rel}`] = v[rel];
+            });
+            condition =
+              (await this.queryOne(relationModel, condition)) || condition;
+            await this.insertOrUpdateOne(relationModel, condition);
+          })
+        );
+      } else {
+        throw new Error(`cannot load reference model ${field.refModel}`);
+      }
+    }
+  }
   private async insertOrUpdateO2M(
     field: IComplexField,
     mixedrecord: IMixedRecord
@@ -189,6 +271,16 @@ class Data {
       mixedrecord,
       "o2m"
     ) as IComplexField[];
+    const o2oField = this.filterField(
+      model,
+      mixedrecord,
+      "o2o"
+    ) as IComplexField[];
+    const m2mField = this.filterField(
+      model,
+      mixedrecord,
+      "m2m"
+    ) as IComplexField[];
     await Promise.all(
       m2oField.map(async (field) => {
         return this.insertOrUpdateM2O(field, mixedrecord);
@@ -199,6 +291,16 @@ class Data {
     await Promise.all(
       o2mField.map(async (field) => {
         return this.insertOrUpdateO2M(field, mixedResult);
+      })
+    );
+    await Promise.all(
+      o2oField.map(async (field) => {
+        return this.insertOrUpdateO2O(field, mixedResult);
+      })
+    );
+    await Promise.all(
+      m2mField.map(async (field) => {
+        return this.insertOrUpdateM2M(field, mixedResult);
       })
     );
     return mixedResult;

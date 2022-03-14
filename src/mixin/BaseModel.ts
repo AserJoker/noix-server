@@ -50,4 +50,9 @@ export class BaseModel {
   public async queryPage(record: IMixedRecord, offset = 0, size = -1) {
     return this.data.queryPage(this.model, record, offset, size);
   }
+
+  @Handle(["record"], "$currentModel")
+  public insertOrUpdateOne(record: IMixedRecord) {
+    return this.data.insertOrUpdateOne(this.model, record);
+  }
 }

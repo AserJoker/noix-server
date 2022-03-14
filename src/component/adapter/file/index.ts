@@ -158,10 +158,15 @@ class FileAdapter implements IDataAdapter {
       }
       list[index] = table.data[index] as IRecord;
     }
+    const keys = Object.keys(record);
     return list.filter((item) => {
-      return Object.keys(record).reduce((last, now) => {
-        return last || item[now] === record[now];
-      }, true);
+      for (let index = 0; index < keys.length; index++) {
+        const key = keys[index] as string;
+        if (item[key] !== record[key]) {
+          return false;
+        }
+      }
+      return true;
     });
   }
   public async count(model: IModel) {
