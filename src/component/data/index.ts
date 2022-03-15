@@ -354,7 +354,7 @@ class Data {
       }
     });
     const list = await this.adapter.query(model, record, offset, size);
-    const total = await this.adapter.count(model);
+    const total = await this.adapter.count(model,record);
     return { list, total };
   }
   public initTable(model: IModel) {

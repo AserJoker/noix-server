@@ -169,14 +169,23 @@ class FileAdapter implements IDataAdapter {
       return true;
     });
   }
-  public async count(model: IModel) {
+  public async count(model: IModel, record: IRecord) {
     this.logger.info(`COUNT ${model.namespace}_${model.name}`);
     const name = `${model.namespace}.${model.name}`.replace(/\./g, "_");
     const filepath = path.resolve(this.rootpath, `${name}.json`);
     const table = JSON.parse(
       fs.readFileSync(filepath, { encoding: "utf-8" }).toString()
     ) as ITable;
-    return table.data.length;
+    const keys = Object.keys(record);
+    return table.data.filter((item) => {
+      for (let index = 0; index < keys.length; index++) {
+        const key = keys[index] as string;
+        if (item[key] !== record[key]) {
+          return false;
+        }
+      }
+      return true;
+    }).length;
   }
   public async createTask() {
     const task = Date.now();
